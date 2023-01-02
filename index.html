@@ -536,15 +536,17 @@
         backgroundColor: "#1a1c24",
 
         axisX: {
+          includeZero: true,
           interval: 3,
+          minimum: 0,
           labelFontColor: "#9293a6",
         },
         axisY: {
-          // includeZero: true,
+          includeZero: false,
           gridThickness: 0,
           labelFontColor: "#9293a6",
           interval: 0.4,
-
+          minimum: 0,
           scaleBreaks: {
             customBreaks: [
               {
@@ -564,11 +566,11 @@
             color: "#e9b10e",
 
             dataPoints: [
-              { x: 3, y: 1 },
-              { x: 6, y: 1.5 },
-              { x: 9, y: 2 },
-              { x: 11, y: 2.4 },
-              { x: 14, y: 3 },
+              { x: 0, y: 0 },
+              { x: 6, y: 1.6 },
+              { x: 9, y: 2.4 },
+              { x: 11, y: 3.2 },
+              { x: 12, y: 4 },
             ],
           },
         ],
