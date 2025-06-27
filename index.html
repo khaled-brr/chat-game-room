@@ -533,6 +533,7 @@
     <script>
       var chart = new CanvasJS.Chart("chartContainer", {
         animationEnabled: true,
+        animationDuration: 3200, // Total time for line animation
         backgroundColor: "#1a1c24",
 
         axisX: {
@@ -542,7 +543,7 @@
           labelFontColor: "#9293a6",
         },
         axisY: {
-          includeZero: false,
+          includeZero: true,
           gridThickness: 0,
           labelFontColor: "#9293a6",
           interval: 0.4,
@@ -562,11 +563,10 @@
             type: "line",
             lineThickness: 5,
             markerSize: 0,
-            markerImageUrl: "img/rocket.png",
             color: "#e9b10e",
 
             dataPoints: [
-              { x: 0, y: 0 },
+              { x: 0, y: 1 },
               { x: 6, y: 1.6 },
               { x: 9, y: 2.4 },
               { x: 11, y: 3.2 },
@@ -576,13 +576,88 @@
         ],
       });
 
-      imageMarker = $("<img>")
-        .attr("src", chart.options.data[0].markerImageUrl)
-        .css("display", "none")
-        .css("height", 150)
-        .css("width", 150)
-        .appendTo($("#chartContainer>.canvasjs-chart-container"));
       chart.render();
+
+      // Add rocket image that follows the curve exactly
+      var rocketImg = $("<img>")
+        .attr("src", "img/rocket.png")
+        .css({
+          position: "absolute",
+          width: "25px",
+          height: "25px",
+          "z-index": "1000",
+          "pointer-events": "none",
+        })
+        .appendTo($("#chartContainer"));
+
+      // Function to position rocket on the curve
+      function positionRocketOnCurve() {
+        var dataPoints = chart.options.data[0].dataPoints;
+        var animationStartTime = Date.now();
+        var totalAnimationTime = 3200; // Match chart animation
+
+        function updateRocketPosition() {
+          var elapsed = Date.now() - animationStartTime;
+          var progress = Math.min(elapsed / totalAnimationTime, 1);
+
+          // Calculate current position along the curve
+          var totalPoints = dataPoints.length - 1;
+          var currentSegment = progress * totalPoints;
+          var segmentIndex = Math.floor(currentSegment);
+          var segmentProgress = currentSegment - segmentIndex;
+
+          // Ensure we don't go beyond the last point
+          if (segmentIndex >= totalPoints) {
+            segmentIndex = totalPoints - 1;
+            segmentProgress = 1;
+          }
+
+          // Get current and next points
+          var currentPoint = dataPoints[segmentIndex];
+          var nextPoint = dataPoints[Math.min(segmentIndex + 1, totalPoints)];
+
+          // Interpolate between points
+          var x =
+            currentPoint.x + (nextPoint.x - currentPoint.x) * segmentProgress;
+          var y =
+            currentPoint.y + (nextPoint.y - currentPoint.y) * segmentProgress;
+
+          // Convert to screen coordinates
+          try {
+            var screenX = chart.axisX[0].convertValueToPixel(x);
+            var screenY = chart.axisY[0].convertValueToPixel(y);
+
+            // Position rocket (center it on the point)
+            rocketImg.css({
+              left: screenX - 12.5 + "px",
+              top: screenY - 12.5 + "px",
+              display: "block",
+            });
+          } catch (e) {
+            // If conversion fails, try again later
+            console.log("Chart not ready, retrying...");
+          }
+
+          // Continue animation
+          if (progress < 1) {
+            requestAnimationFrame(updateRocketPosition);
+          }
+        }
+
+        // Start the animation
+        updateRocketPosition();
+      }
+
+      // Start rocket animation after chart is ready
+      setTimeout(function () {
+        // Make sure chart is fully rendered
+        if (chart.axisX && chart.axisX[0] && chart.axisY && chart.axisY[0]) {
+          positionRocketOnCurve();
+        } else {
+          // Wait longer if chart isn't ready
+          setTimeout(positionRocketOnCurve, 1000);
+        }
+      }, 1200);
     </script>
     <script src="js/main.js"></script>
   </body>
